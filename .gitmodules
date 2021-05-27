@@ -1,0 +1,3 @@
+[submodule "amef_dehazing"]
+	path = amef_dehazing
+	url = https://github.com/agaldran/amef_dehazing.git
