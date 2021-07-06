@@ -1,29 +1,29 @@
-function R = amef(I_hazy, clip_range)
-I_hazy = im2double(I_hazy);
-I = zeros(size(I_hazy,1),size(I_hazy,2),size(I_hazy,3),6);
+function [R, W, I] = amef(I_hazy, clip_range)
+    I_hazy = im2double(I_hazy);
+    I = zeros(size(I_hazy,1),size(I_hazy,2),size(I_hazy,3),6);
 
-I(:,:,:,1) = I_hazy;
-range = linspace(1,6,6);
-for i=2:5
-    gamma = range(i);
-    for c=1:3
-        I(:,:,c,i) = I_hazy(:,:,c).^gamma;
+    I(:,:,:,1) = I_hazy;
+    range = linspace(1,6,6);
+    % Check out different numbers for
+    for i=2:5
+        gamma = range(i);
+        for c=1:3
+            I(:,:,c,i) = I_hazy(:,:,c).^gamma;
+        end
     end
+
+
+    for c=1:3
+        I(:,:,c,6) = adapthisteq(I_hazy(:,:,c),'clipLimit',clip_range);
+    end
+
+
+    [R, W] = exposure_fusion(I);
 end
 
 
-for c=1:3
-    I(:,:,c,6) = adapthisteq(I_hazy(:,:,c),'clipLimit',clip_range);
-end
 
-
-R = exposure_fusion(I);
-
-end
-
-
-
-function R = exposure_fusion(I)
+function [R, W] = exposure_fusion(I)
 % Simplification of the implementation of Exposure Fusion
 % written by Tom Mertens, Hasselt University, August 2007
 % If you are interested only in the image fusion part, 

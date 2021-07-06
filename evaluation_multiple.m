@@ -3,8 +3,11 @@ imageDatasets = dir('Datasets/Images');
 
 [num, ~] = size(imageDatasets);
 
-eval = fopen("./results/eval.csv", 'w');
-fprintf(eval, 'Dataset,Filename,Method,MSE,SSIM\r\n');
+d = string(datetime(now,'ConvertFrom','datenum'));
+d = regexprep(d, ' |:|-', '_');
+
+eval = fopen("./results/eval_" + d + ".csv", 'w');
+fprintf(eval, 'Dataset,Filename,Size(Pixels),Method,MSE,SSIM,Time\r\n');
 
 for i = 3:num
     set_name = imageDatasets(i).name;
@@ -14,6 +17,8 @@ for i = 3:num
         imageDatasets(i).name == "OTS" || ...
         imageDatasets(i).name == "SOTS-IN" || ...
         imageDatasets(i).name == "SOTS-OUT" || ...
+        imageDatasets(i).name == "O-HAZY-NTIRE-2018" || ...
+        imageDatasets(i).name == "I-HAZY-NTIRE-2018" || ...
         imageDatasets(i).name == "RTTS"
         continue;
     end
@@ -25,29 +30,45 @@ for i = 3:num
     mkdir("./results/CAP/" + set_name)
     mkdir("./results/AMEF/" + set_name)
 
-    for j = 3:3 %size(images_hz,1)
+    for j = 3:size(images_hz,1)
         gt = imread(images_gt(j).folder + "/" + images_gt(j).name);
         hz = imread(images_hz(j).folder + "/" + images_hz(j).name);
         
+        [x, y] = size(gt);
+        image_size = string(x * y);
+        
         gt_double = im2double(gt);
+        hz_double = im2double(hz);
 
         [~, name, ~] = fileparts(images_gt(j).name);
 
         name = regexprep(name, ['_GT' '$'], '');
-
+        
+        mse_HAZY = immse(hz_double, gt_double);
+        ssim_HAZY = ssim(hz_double, gt_double);
+        
+        start = tic;
         dh_CAP = cap(hz);
+        end_CAP = toc(start);
+        
         dh_CAP = im2double(dh_CAP);
         imwrite(dh_CAP, ("./results/CAP/" + set_name + "/" + name + "_dh.jpg"));
         mse_CAP = immse(dh_CAP, gt_double);
         ssim_CAP = ssim(dh_CAP, gt_double);
         
-        dh_AMEF = amef(hz, 0.010);
+        
+        start = tic;
+        [dh_AMEF, ~, ~] = amef(hz, 0.010);
+        end_AMEF = toc(start);
+        
         imwrite(dh_AMEF, ("./results/AMEF/" + set_name + "/" + name + "_dh.jpg"));
         mse_AMEF = immse(dh_AMEF, gt_double);
         ssim_AMEF = ssim(dh_AMEF, gt_double);
         
-        fprintf(eval, '%s,%s,CAP,%f,%f\r\n',set_name, name, mse_CAP, ssim_CAP);
-        fprintf(eval, '%s,%s,AMEF,%f,%f\r\n',set_name, name, mse_AMEF, ssim_AMEF);
+        
+        fprintf(eval, '%s,%s,%s,HAZY,%f,%f\r\n',set_name, name, image_size, mse_HAZY, ssim_HAZY);
+        fprintf(eval, '%s,%s,%s,CAP,%f,%f,%f\r\n',set_name, name, image_size, mse_CAP, ssim_CAP, end_CAP);
+        fprintf(eval, '%s,%s,%s,AMEF,%f,%f,%f\r\n',set_name, name, image_size, mse_AMEF, ssim_AMEF, end_AMEF);
         
         disp(name)
     end
