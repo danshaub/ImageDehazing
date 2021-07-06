@@ -1,1 +1,7 @@
 Datasets/
+images/
+weights/
+results/AMEF
+results/CAP
+results/_single
+*.asv
