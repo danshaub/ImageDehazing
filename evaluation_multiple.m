@@ -17,9 +17,10 @@ for i = 3:num
         imageDatasets(i).name == "OTS" || ...
         imageDatasets(i).name == "SOTS-IN" || ...
         imageDatasets(i).name == "SOTS-OUT" || ...
-        imageDatasets(i).name == "O-HAZY-NTIRE-2018" || ...
-        imageDatasets(i).name == "I-HAZY-NTIRE-2018" || ...
-        imageDatasets(i).name == "RTTS"
+        imageDatasets(i).name == "RTTS" 
+%         imageDatasets(i).name == "O-HAZY-NTIRE-2018" || ...
+%         imageDatasets(i).name == "I-HAZY-NTIRE-2018" || ...
+%         imageDatasets(i).name == "D-HAZY-MID" 
         continue;
     end
 
@@ -56,22 +57,29 @@ for i = 3:num
         mse_CAP = immse(dh_CAP, gt_double);
         ssim_CAP = ssim(dh_CAP, gt_double);
         
-        
-        start = tic;
-        [dh_AMEF, ~, ~] = amef(hz, 0.010);
-        end_AMEF = toc(start);
-        
-        imwrite(dh_AMEF, ("./results/AMEF/" + set_name + "/" + name + "_dh.jpg"));
-        mse_AMEF = immse(dh_AMEF, gt_double);
-        ssim_AMEF = ssim(dh_AMEF, gt_double);
-        
-        
         fprintf(eval, '%s,%s,%s,HAZY,%f,%f\r\n',set_name, name, image_size, mse_HAZY, ssim_HAZY);
         fprintf(eval, '%s,%s,%s,CAP,%f,%f,%f\r\n',set_name, name, image_size, mse_CAP, ssim_CAP, end_CAP);
-        fprintf(eval, '%s,%s,%s,AMEF,%f,%f,%f\r\n',set_name, name, image_size, mse_AMEF, ssim_AMEF, end_AMEF);
         
+        
+        
+        
+        for k = [0.003, 0.005, 0.010, 0.015, 0.020]
+            start = tic;
+            [dh_AMEF, ~, ~] = amef(hz, k);
+            end_AMEF = toc(start);
+            imwrite(dh_AMEF, ("./results/AMEF/" + set_name + "/" + name + "_" + string(k) + "_dh.jpg"));
+             mse_AMEF = immse(dh_AMEF, gt_double);
+            ssim_AMEF = ssim(dh_AMEF, gt_double);
+            fprintf(eval, '%s,%s,%s,AMEF_'+string(k)+',%f,%f,%f\r\n',set_name, name, image_size, mse_AMEF, ssim_AMEF, end_AMEF);
+        end        
         disp(name)
+        
+        vars = {'gt','hz','x', 'y', 'image_size', 'name', 'start'};
+        clear(vars{:})
+        clear vars
+        clear regexp *CAP *HAZY *AMEF;
+        break
     end
 end
-
 fclose(eval);
+clear
