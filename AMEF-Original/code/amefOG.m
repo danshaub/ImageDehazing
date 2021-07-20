@@ -1,11 +1,7 @@
-function [R, W, I] = amef(I_hazy, clip_range)
-    disp("AMEF Modified")
+function [R, W, I] = amefOG(I_hazy, clip_range)
+    disp("AMEF Original")
     I_hazy = im2double(I_hazy);
     I = zeros(size(I_hazy,1),size(I_hazy,2),size(I_hazy,3),6);
-    
-    for c=1:3
-        I(:,:,c,6) = adapthisteq(I_hazy(:,:,c),'clipLimit',clip_range);
-    end
 
     I(:,:,:,1) = I_hazy;
     range = linspace(1,6,6);
@@ -13,9 +9,15 @@ function [R, W, I] = amef(I_hazy, clip_range)
     for i=2:5
         gamma = range(i);
         for c=1:3
-            I(:,:,c,i) = I(:,:,c,6).^gamma;
+            I(:,:,c,i) = I_hazy(:,:,c).^gamma;
         end
     end
+
+
+    for c=1:3
+        I(:,:,c,6) = adapthisteq(I_hazy(:,:,c),'clipLimit',clip_range);
+    end
+
 
     [R, W] = exposure_fusion(I);
 end
