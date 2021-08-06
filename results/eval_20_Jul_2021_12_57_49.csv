@@ -1,0 +1,2 @@
+Dataset,Filename,Size(Pixels),Method,MSE,SSIM,MSE_Imp,SSIM_Imp,Time
+D-HAZY-MID,Adirondack_im0,17176320,HAZY,0.093500,0.686573,0.000000,0.000000
