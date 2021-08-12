@@ -29,7 +29,14 @@ for i = 3:num
 
     mkdir("./results/CAP/" + set_name)
     mkdir("./results/AMEF/" + set_name)
+    mkdir("./results/AMEF_MOD/" + set_name)
 
+    
+    total_ssim = 0;
+    total_mse = 0;
+    total_ssim_mod = 0;
+    total_mse_mod = 0;
+    num_images = 0;
     for j = 3:size(images_hz,1)
         gt = imread(images_gt(j).folder + "/" + images_gt(j).name);
         hz = imread(images_hz(j).folder + "/" + images_hz(j).name);
@@ -65,13 +72,33 @@ for i = 3:num
         mse_AMEF = immse(dh_AMEF, gt_double);
         ssim_AMEF = ssim(dh_AMEF, gt_double);
         
+        total_ssim = total_ssim + ssim_AMEF;
+        total_mse = total_mse + mse_AMEF;
+        
+        start = tic;
+        [dh_AMEF_mod, W_NEW, ~] = amef_modified(hz, 0.010);
+        end_AMEF_mod = toc(start);
+        
+        imwrite(dh_AMEF_mod, ("./results/AMEF_MOD/" + set_name + "/" + name + "_dh.jpg"));
+        mse_AMEF_mod = immse(dh_AMEF_mod, gt_double);
+        ssim_AMEF_mod = ssim(dh_AMEF_mod, gt_double);
+        
+        total_ssim_mod = total_ssim_mod + ssim_AMEF_mod;
+        total_mse_mod = total_mse_mod + mse_AMEF_mod;
+        
+        num_images = num_images + 1;
+
         
         fprintf(eval, '%s,%s,%s,HAZY,%f,%f\r\n',set_name, name, image_size, mse_HAZY, ssim_HAZY);
         fprintf(eval, '%s,%s,%s,CAP,%f,%f,%f\r\n',set_name, name, image_size, mse_CAP, ssim_CAP, end_CAP);
         fprintf(eval, '%s,%s,%s,AMEF,%f,%f,%f\r\n',set_name, name, image_size, mse_AMEF, ssim_AMEF, end_AMEF);
-        
+        fprintf(eval, '%s,%s,%s,AMEF_MOD,%f,%f,%f\r\n',set_name, name, image_size, mse_AMEF_mod, ssim_AMEF_mod, end_AMEF_mod);
         disp(name)
     end
+    avg_ssim = total_ssim/num_images;
+    avg_mse = total_mse/num_images;
+    avg_ssim_mod = total_ssim_mod/num_images;
+    avg_mse_mod = total_mse_mod/num_images;
 end
 
 fclose(eval);
